@@ -821,21 +821,28 @@ function playCurrentAudio() {
 }
 
 function fallbackToSpeechSynthesis(text) {
-    if (!('speechSynthesis' in window)) return;
+    if (!('speechSynthesis' in window)) {
+        alert("ОШИБКА: В этом WebView вообще нет поддержки синтеза речи (speechSynthesis).");
+        return;
+    }
 
     setTimeout(() => {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'de-DE';
         utterance.rate = 0.85;
 
+        // Добавляем обработчик ошибок
+        utterance.onerror = function(event) {
+            alert("ОШИБКА ОЗВУЧКИ: " + event.error);
+        };
+
         const voices = window.speechSynthesis.getVoices();
-        const naturalVoice = voices.find(v => 
-            v.lang.startsWith('de') && 
-            (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Siri') || v.name.includes('Clara') || v.name.includes('Viktor'))
-        );
+        const naturalVoice = voices.find(v => v.lang.startsWith('de'));
 
         if (naturalVoice) {
             utterance.voice = naturalVoice;
+        } else {
+            alert("ВНИМАНИЕ: В системе не найден немецкий голос (de-DE). Возможно, нужно установить Google TTS в настройках телефона.");
         }
 
         window.speechSynthesis.speak(utterance);
